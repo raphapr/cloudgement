@@ -51,11 +51,11 @@ parser.parse!
 
 #####################################################################################
 
-opt[:vms] = 3
-opt[:distro] = 'fedora'
-opt[:img] = 'Fedora-x86_64-20-20140618-sda'
-opt[:flavor] = 'm1.tiny'
-opt[:packs] = 'vim mariadb mysql mysql-server'
+#opt[:vms] = 3
+#opt[:distro] = 'fedora'
+#opt[:img] = 'Fedora-x86_64-20-20140618-sda'
+#opt[:flavor] = 'm1.tiny'
+#opt[:packs] = 'vim mariadb mysql mysql-server'
 path = File.expand_path(File.join(File.dirname(__FILE__), "template.yaml")) # relative path
 ipInstances = []
 
@@ -166,22 +166,14 @@ resources = {
 }
 
 outputs = {
-
     'outputs' => {
-
-        'instance_ip' => {
-            'description' => 'The IP address of the desployed instance',
-             'value' => {
-                'get_attr' => ipInstances
-            }
-        }
     }
 }
 
 opt[:vms].to_i.times do |i|
     instName = 'my_instance'+(i+1).to_s
-    ipInstances.push('my_instance'+(i+1).to_s)
-    tmp = { instName => {
+    privateIp = 'server'+(i+1).to_s+'_private_ip'
+    resourcesTMP = { instName => {
                 'type' => 'OS::Nova::Server',
                 'properties' => {
                     'image' => {
@@ -204,7 +196,16 @@ opt[:vms].to_i.times do |i|
                 }
             }
     }
-    resources['resources'].merge!(tmp)
+    outputsTMP = {
+        privateIp => {
+            'description' => 'IP address of the server in the private network',
+            'value' => {
+                'get_attr' => [ instName, 'address'+(i+1).to_s ]
+            }
+        }
+    }
+    resources['resources'].merge!(resourcesTMP)
+    outputs['outputs'].merge!(outputsTMP) 
 end
 
 f.write cabecalho.to_yaml
